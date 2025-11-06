@@ -104,5 +104,69 @@ class EmployeeModel {
         $stmt = $this->conn->prepare($query);
         return $stmt->execute();
     }
+
+    // METHOD 10: Get Salary Stats (AVG, MIN, MAX) per Department
+    public function getSalaryStatsByDepartment() {
+        $query = "
+            SELECT 
+                department, 
+                AVG(salary) as avg_salary, 
+                MAX(salary) as max_salary, 
+                MIN(salary) as min_salary,
+                COUNT(id) as total_employees_dept
+            FROM " . $this->table_name . "
+            GROUP BY department
+            ORDER BY department
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    // METHOD 11: Get Tenure Stats (Masa Kerja)
+    public function getTenureStats() {
+    // Menggunakan subquery untuk mendefinisikan 'tenure_category' terlebih dahulu,
+    // sehingga alias dapat digunakan dengan aman di GROUP BY dan ORDER BY di query luar.
+    $query = "
+        SELECT 
+            tenure_category, 
+            COUNT(id) AS total_employees
+        FROM (
+            SELECT
+                id,
+                CASE
+                    WHEN AGE(NOW(), hire_date) < INTERVAL '1 year' THEN 'Junior (< 1 tahun)'
+                    WHEN AGE(NOW(), hire_date) >= INTERVAL '1 year' AND AGE(NOW(), hire_date) <= INTERVAL '3 years' THEN 'Middle (1 - 3 tahun)'
+                    ELSE 'Senior (> 3 tahun)'
+                END AS tenure_category
+            FROM " . $this->table_name . "
+        ) AS tenure_data
+        GROUP BY tenure_category
+        ORDER BY
+            CASE 
+                WHEN tenure_category = 'Senior (> 3 tahun)' THEN 1
+                WHEN tenure_category = 'Middle (1 - 3 tahun)' THEN 2
+                ELSE 3
+            END;
+    ";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
+
+    // METHOD 12: Get Employee Overview (Total, Total Salary, Avg Tenure)
+    public function getEmployeeOverview() {
+        $query = "
+            SELECT
+                COUNT(id) AS total_employees,
+                SUM(salary) AS total_monthly_salary,
+                AVG(EXTRACT(EPOCH FROM AGE(NOW(), hire_date))) / (60*60*24*365.25) AS avg_years_service
+            FROM " . $this->table_name . "
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
 }
 ?>

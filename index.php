@@ -81,6 +81,23 @@ switch ($action) {
         }
         break;
 
+// ... (lanjutan dari case 'delete')
+
+    case 'salary_stats':
+        $salary_stats = $employeeModel->getSalaryStatsByDepartment();
+        include 'views/salary_stats.php';
+        break;
+
+    case 'tenure_stats':
+        $tenure_stats = $employeeModel->getTenureStats();
+        include 'views/tenure_stats.php';
+        break;
+
+    case 'employee_overview':
+        $overview = $employeeModel->getEmployeeOverview();
+        include 'views/employee_overview.php';
+        break;
+
     case 'department_stats':
         $stats = $employeeModel->getDepartmentStats();
         include 'views/department_stats.php';
